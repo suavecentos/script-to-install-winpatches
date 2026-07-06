@@ -1,0 +1,142 @@
+# MSI Patch Installation Script
+
+## Overview
+
+This PowerShell script automates the installation of multiple MSI patch packages from a network share or local directory. The script installs each package sequentially, suppresses automatic reboots, generates detailed installation logs, and provides a summary of the installation results.
+
+## Features
+
+* Automatically discovers MSI files in the specified source directory.
+* Installs patches one at a time using `msiexec`.
+* Waits for each installation to complete before proceeding.
+* Suppresses automatic system reboots.
+* Generates individual MSI installation logs.
+* Creates a consolidated summary log.
+* Detects when a reboot is required.
+* Supports configurable error handling:
+
+  * Continue processing after failures.
+  * Stop immediately on the first failure.
+
+## Prerequisites
+
+* Windows Server or Windows Workstation operating system.
+* PowerShell 5.1 or later.
+* Local Administrator privileges.
+* Access to the network share or local folder containing the MSI files.
+* Sufficient free disk space for installation and logging.
+
+## Configuration
+
+Modify the following variables at the beginning of the script:
+
+```powershell
+$PatchSource = "\\fileserver\patches"
+$LogFolder   = "C:\PatchLogs"
+$StopOnError = $true
+```
+
+### Parameters
+
+| Variable       | Description                                                                                                 |
+| -------------- | ----------------------------------------------------------------------------------------------------------- |
+| `$PatchSource` | Location of the MSI patch files. Can be a UNC path or local directory.                                      |
+| `$LogFolder`   | Directory where installation logs will be stored.                                                           |
+| `$StopOnError` | If set to `$true`, the script stops after the first failed installation. If `$false`, processing continues. |
+
+## Usage
+
+1. Copy all MSI patch files into the designated patch source folder.
+2. Update the configuration variables if required.
+3. Launch PowerShell as Administrator.
+4. Execute the script:
+
+```powershell
+.\Install-MsiPatches.ps1
+```
+
+## Logging
+
+The script generates the following logs:
+
+### Summary Log
+
+```text
+C:\PatchLogs\PatchSummary.log
+```
+
+Contains:
+
+* Installation start and finish times.
+* Success and failure information.
+* Exit codes.
+* Reboot requirements.
+* Final installation summary.
+
+### Individual MSI Logs
+
+```text
+C:\PatchLogs\<PackageName>.log
+```
+
+Contains detailed Windows Installer logging for troubleshooting.
+
+## Exit Codes
+
+| Exit Code | Meaning                                                   |
+| --------- | --------------------------------------------------------- |
+| 0         | Installation completed successfully                       |
+| 3010      | Installation completed successfully and requires a reboot |
+| 1603      | Fatal installation error                                  |
+| 1618      | Another installation is already running                   |
+
+## Reboot Handling
+
+The script uses the following installer options:
+
+```text
+/qn /norestart
+```
+
+As a result:
+
+* No user interaction is required.
+* No automatic reboot is performed.
+* If a package requests a reboot, the requirement is recorded in the summary log.
+* A manual reboot should be scheduled after all patches have been installed.
+
+## Best Practices
+
+* Test all patches in a non-production environment before deployment.
+* Verify patch installation order when vendor documentation specifies dependencies.
+* Ensure no other software installation processes are running.
+* Review installation logs for any failures before scheduling a reboot.
+* Back up critical systems before applying patches.
+
+## Example Deployment Scenario
+
+1. Place approved MSI patches in:
+
+```text
+\\fileserver\patches
+```
+
+2. Execute the script on the target server.
+
+3. Review:
+
+```text
+C:\PatchLogs\PatchSummary.log
+```
+
+4. Confirm all installations completed successfully.
+
+5. Schedule a maintenance reboot if required.
+
+## Author
+
+System Administration / Infrastructure Automation Team
+
+## Version
+
+1.0
